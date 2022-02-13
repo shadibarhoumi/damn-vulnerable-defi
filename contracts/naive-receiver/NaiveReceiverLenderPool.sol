@@ -20,7 +20,7 @@ contract NaiveReceiverLenderPool is ReentrancyGuard {
 
     function flashLoan(address borrower, uint256 borrowAmount) external nonReentrant {
 
-        uint256 balanceBefore = address(this).balance;
+        uint256 balanceBefore = address(this).balance; // 1000 ETH
         require(balanceBefore >= borrowAmount, "Not enough ETH in pool");
 
 
